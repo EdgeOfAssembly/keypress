@@ -1,0 +1,83 @@
+# DOSBox-X Automation Example
+# Usage: ./keypress.py "dosbox-x" examples/dosbox_commands.txt -w DOSBox --emulator-mode -d 3
+# 
+# IMPORTANT: Must use --emulator-mode flag for DOSBox-X!
+# DOSBox runs DOS internally which expects US keyboard layout
+
+# Wait for DOSBox to fully start
+<wait:3>
+
+# Mount C drive (adjust path to your DOS directory)
+mount c ~/dos
+<wait:1>
+
+# Switch to C drive
+c:
+
+# Show current directory
+dir
+
+# Create a test directory
+mkdir automation_test
+cd automation_test
+
+# Create a simple text file
+echo This file was created by keypress.py! > test.txt
+
+# Display the file
+type test.txt
+<wait:1>
+
+# Create a batch file
+echo @echo off > hello.bat
+echo echo ================================ >> hello.bat
+echo echo Hello from automated DOSBox! >> hello.bat
+echo echo ================================ >> hello.bat
+echo pause >> hello.bat
+
+# Run the batch file
+hello.bat
+<wait:2>
+
+# Press a key to continue (pause command)
+<Space>
+
+# Create another example - a simple program listing
+echo echo Enter your name: > input.bat
+echo set /p name= >> input.bat
+echo echo Hello %name%! >> input.bat
+
+# Show the batch file contents
+type input.bat
+<wait:2>
+
+# Test path with backslashes
+echo Path test: C:\DOS\GAMES\MONKEY
+<wait:1>
+
+# Directory operations
+cd ..
+dir automation_test
+<wait:1>
+
+# Cleanup test (optional - comment out if you want to keep files)
+# deltree /y automation_test
+
+# Show DOS version
+ver
+<wait:1>
+
+# Memory check
+mem
+<wait:2>
+
+# Return to root
+cd \
+dir
+
+# Final message
+echo Automation complete!
+<wait:1>
+
+# Exit DOSBox (comment out if you want it to stay open)
+# exit

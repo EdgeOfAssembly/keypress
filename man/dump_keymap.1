@@ -1,0 +1,195 @@
+.TH DUMP_KEYMAP 1 "2025-02-17" "1.0" "User Commands"
+.SH NAME
+dump_keymap.py \- display X11 keyboard mapping information
+.SH SYNOPSIS
+.B dump_keymap.py
+.SH DESCRIPTION
+.B dump_keymap.py
+is a diagnostic utility that queries and displays the complete X11 keyboard mapping for your system. It shows all keycodes, their associated keysyms across all columns (including AltGr and extended levels), and searches for commonly problematic symbols.
+
+This tool is useful for:
+.IP \(bu 2
+Debugging keyboard layout issues
+.IP \(bu 2
+Understanding why certain symbols don't work
+.IP \(bu 2
+Discovering which keycode+modifier produces a character
+.IP \(bu 2
+Verifying your keyboard layout configuration
+.IP \(bu 2
+Learning about multi-column keymaps
+
+.SH OUTPUT FORMAT
+The output consists of three sections:
+
+.SS 1. Keycode Range
+Shows the minimum and maximum keycode values supported by your X server:
+.nf
+Keycode range: 8-255
+.fi
+
+.SS 2. Full Keymap Dump
+For each keycode with assigned keysyms, displays:
+.nf
+Keycode NN:
+  Col 0 [Normal      ]: keysym=0xXXXX char='C'  (name)
+  Col 1 [Shift       ]: keysym=0xXXXX char='C'  (name)
+  Col 2 [AltGr       ]: keysym=0xXXXX char='C'  (name)
+  Col 3 [Shift+AltGr ]: keysym=0xXXXX char='C'  (name)
+  ...
+.fi
+
+Where:
+.IP \(bu 2
+.B Keycode
+\- Physical key identifier
+.IP \(bu 2
+.B Col
+\- Keymap column (modifier level)
+.IP \(bu 2
+.B keysym
+\- X11 keysym value (hexadecimal)
+.IP \(bu 2
+.B char
+\- Resulting character (or 'None')
+.IP \(bu 2
+.B (name)
+\- Keysym name if available
+
+.SS 3. Symbol Search
+Searches for commonly problematic symbols and shows where they're located:
+.nf
+Searching for '[' (keysym 0x005b):
+  FOUND: Keycode 17, Column 4 (AltGr)
+
+Searching for ']' (keysym 0x005d):
+  FOUND: Keycode 18, Column 4 (AltGr)
+.fi
+
+Searched symbols: [ ] \\ { } | / - =
+
+.SH EXAMPLES
+.SS Basic Usage
+Display complete keyboard mapping:
+.nf
+dump_keymap.py
+.fi
+
+.SS Save to File
+Save output for analysis:
+.nf
+dump_keymap.py > my_keymap.txt
+.fi
+
+.SS Find Bracket Keys
+Search for where brackets are located:
+.nf
+dump_keymap.py | grep -A2 "Searching for '\\['"
+dump_keymap.py | grep -A2 "Searching for '\\]'"
+.fi
+
+.SS Find Specific Keycode
+See what a specific keycode produces:
+.nf
+dump_keymap.py | grep -A10 "^Keycode 17:"
+.fi
+
+.SS Count Available Characters
+Count how many characters are mapped:
+.nf
+dump_keymap.py | grep "char=" | grep -v "char=None" | wc -l
+.fi
+
+.SH COLUMN MEANINGS
+X11 keymaps use columns to represent different modifier states:
+
+.TS
+tab(|);
+l l l.
+Column|Modifiers|Example (Finnish)
+_
+0|None|8
+1|Shift|(
+2|Mode_switch|8 (duplicate)
+3|Mode + Shift|(
+4|ISO_Level3 (AltGr)|[
+5|Level3 + Shift|<
+6+|Extended levels|Varies
+.TE
+
+Most layouts use columns 0-1 (normal/shift). European layouts often use column 4 for AltGr symbols. Extended layouts may use even higher columns.
+
+.SH USE WITH KEYPRESS.PY
+.B dump_keymap.py
+helps debug
+.BR keypress.py (1)
+issues:
+
+.SS Symbol Not Typing
+If keypress.py says "character not in current layout":
+.nf
+dump_keymap.py | grep "Searching for 'X'"
+.fi
+
+If "NOT FOUND", the symbol isn't in your X11 keymap. Check your layout:
+.nf
+setxkbmap -query
+xmodmap -pke | grep X
+.fi
+
+.SS Verify Detection
+Run keypress.py with --debug and compare to dump_keymap.py output:
+.nf
+keypress.py "app" script.txt --debug
+dump_keymap.py | grep "Searching"
+.fi
+
+They should match. If keypress.py misses symbols that dump_keymap.py finds, report a bug.
+
+.SH TECHNICAL DETAILS
+The tool uses python-xlib's \fBget_keyboard_mapping()\fR function to query the X server's core keyboard mapping. It then attempts to convert each keysym to a character using both manual mapping and \fBXK.keysym_to_string()\fR.
+
+Note: This shows the core X11 mapping, not XKB (X Keyboard Extension) levels. Some advanced keyboard features may not appear.
+
+.SH OUTPUT SIZE
+The full output can be large (1000+ lines) depending on your keyboard configuration. Redirect to a file for easier analysis:
+.nf
+dump_keymap.py > keymap.txt
+less keymap.txt
+.fi
+
+.SH ENVIRONMENT
+.TP
+.B DISPLAY
+X11 display to connect to (default: :0)
+
+.SH DEPENDENCIES
+Requires python3-xlib package:
+.nf
+Debian/Ubuntu: apt install python3-xlib
+Arch/Manjaro:  pacman -S python-xlib
+Fedora:        dnf install python3-xlib
+.fi
+
+.SH BUGS
+.IP \(bu 2
+Only works on X11, not Wayland
+.IP \(bu 2
+Does not show XKB-specific advanced features
+.IP \(bu 2
+Keysym to character conversion may fail for exotic symbols
+
+.SH SEE ALSO
+.BR keypress.py (1),
+.BR xmodmap (1),
+.BR setxkbmap (1),
+.BR xev (1),
+.BR python-xlib (7)
+
+.SH AUTHOR
+EdgeOfAssembly <haxbox2000@gmail.com>
+
+.SH COPYRIGHT
+Copyright \(co 2025 EdgeOfAssembly. License GPLv3+: GNU GPL version 3 or later.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.

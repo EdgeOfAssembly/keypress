@@ -1,0 +1,206 @@
+.TH KEYPRESS 1 "2025-02-17" "1.0" "User Commands"
+.SH NAME
+keypress \- layout-aware X11 keyboard automation tool
+.SH SYNOPSIS
+.B keypress.py
+[\fB\-h\fR]
+[\fB\-c\fR \fICOMMAND\fR]
+[\fB\-d\fR \fIDELAY\fR]
+[\fB\-t\fR \fITYPING_DELAY\fR]
+[\fB\-w\fR \fIWINDOW\fR]
+[\fB\-n\fR]
+[\fB\-e\fR]
+[\fB\-\-debug\fR]
+.I program
+.RI [ script ]
+.SH DESCRIPTION
+.B keypress.py
+is a keyboard automation tool that respects your system keyboard layout, unlike xdotool which uses hardcoded US keycodes. It properly handles multi-column keymaps, AltGr symbols, and provides both system-layout and emulator modes.
+
+The tool was created to solve the problem of automating keyboard input on non-US layouts (Finnish, German, Swedish, etc.) where symbols like brackets and backslashes are in different keymap columns than US layouts expect.
+.SH OPTIONS
+.TP
+.B \-h, \-\-help
+Show help message and exit.
+.TP
+.BI \-c\  COMMAND \fR,\ \fB\-\-command\  COMMAND
+Execute a single command. Can be repeated for multiple commands. If no script file is provided, at least one \fB\-c\fR option is required.
+.TP
+.BI \-d\  DELAY \fR,\ \fB\-\-delay\  DELAY
+Startup delay in seconds before searching for the program window. Default: 2.0. Increase if window detection fails.
+.TP
+.BI \-t\  TYPING_DELAY \fR,\ \fB\-\-typing\-delay\  TYPING_DELAY
+Delay between individual keystrokes in seconds. Default: 0.03 (30ms). Increase for slower typing, decrease for faster.
+.TP
+.BI \-w\  WINDOW \fR,\ \fB\-\-window\  WINDOW
+Window name pattern to search for. Recommended for reliable window detection. The pattern is case-insensitive and matches partial names.
+.TP
+.B \-n, \-\-no\-wait
+Exit immediately after executing the script instead of waiting for the program to exit. Useful for background processes.
+.TP
+.B \-e, \-\-emulator\-mode
+Use hardcoded US keyboard layout instead of system layout. Required for emulators (DOSBox-X, VICE, MAME) that internally expect US keyboard layout.
+.TP
+.B \-\-debug
+Enable debug output showing detected keyboard mapping. Displays which characters are cached and their keycodes/modifiers.
+.SH POSITIONAL ARGUMENTS
+.TP
+.I program
+Program to launch. If the program command contains arguments or spaces, enclose in quotes: "dosbox-x -c 'mount c ~/dos'".
+.TP
+.I script
+Path to script file containing commands to execute. Optional if \fB\-c\fR is used.
+.SH SCRIPT FILE FORMAT
+Each line in the script file is typed followed by Enter, unless special commands are used.
+
+.SS Regular Text
+.nf
+dir /p
+echo "Hello"
+path=c:\\dos
+.fi
+
+.SS Special Keys
+Special keys are enclosed in angle brackets:
+.nf
+<Esc>              Escape key
+<Tab>              Tab key
+<Backspace>        Backspace
+<Delete>           Delete key
+<Return>           Enter/Return
+<Space>            Space bar
+<F1> ... <F12>     Function keys
+<Up> <Down>        Arrow keys
+<Left> <Right>
+<Home> <End>       Navigation keys
+<PageUp> <PageDown>
+.fi
+
+.SS Key Combinations
+Use + to combine keys:
+.nf
+<Ctrl+c>           Ctrl+C (copy)
+<Ctrl+v>           Ctrl+V (paste)
+<Alt+F4>           Alt+F4 (close)
+<Shift+Insert>     Shift+Insert
+<Ctrl+Alt+Del>     Three-key combo
+.fi
+
+.SS Special Commands
+.nf
+<wait:2>           Wait 2 seconds
+<wait:0.5>         Wait 500 milliseconds
+<nowait>           Don't press Enter after previous line
+# comment          Comment line (ignored)
+.fi
+
+.SS Complete Example
+.nf
+# Wait for app to start
+<wait:2>
+
+# Type username
+admin
+<Tab>
+
+# Type password
+secret123
+<Return>
+
+# Wait for login
+<wait:1>
+
+# Open file
+<Ctrl+o>
+test.txt
+<Return>
+.fi
+
+.SH EXAMPLES
+.SS Normal Applications
+Automate text editor with system keyboard layout:
+.nf
+keypress.py "leafpad" script.txt -w leafpad
+keypress.py "gedit" commands.txt -w gedit -d 3
+.fi
+
+.SS Emulators
+Automate DOSBox with US layout (required):
+.nf
+keypress.py "dosbox-x" dos.txt -w DOSBox --emulator-mode
+keypress.py "vice" game.txt -w VICE -e -d 5
+.fi
+
+.SS Quick Commands
+Execute without script file:
+.nf
+keypress.py "xterm" -c "ls -la" -c "pwd" -w xterm
+keypress.py "leafpad" -c "Hello" -c "<Ctrl+s>" -w leafpad -n
+.fi
+
+.SS Debug Keyboard Layout
+See what characters are detected:
+.nf
+keypress.py "leafpad" test.txt --debug
+.fi
+
+.SH MODES
+.SS Normal Mode (Default)
+Queries X11 keyboard mapping and respects your system layout (Finnish, German, Swedish, etc.). Properly handles AltGr symbols in extended keymap columns. Use for normal applications like text editors, terminals, browsers.
+
+.SS Emulator Mode (\-\-emulator\-mode)
+Uses hardcoded US keyboard layout, ignoring system settings. Required for emulators (DOSBox-X, VICE, MAME) because they run DOS/games internally which expect US keyboard codes. Without this flag, symbols will be wrong in emulators.
+
+.SH WINDOW DETECTION
+The program searches for the target window in two ways:
+
+.SS By PID (Default)
+Searches for a window belonging to the launched process. Works for simple cases but may fail for complex applications.
+
+.SS By Name Pattern (\-w)
+Searches for a window whose title matches the pattern (case-insensitive, partial match). More reliable:
+.nf
+keypress.py "app" script.txt -w "Application Name"
+.fi
+
+Use \fBxdotool search --name ""\fR to list all windows and find the correct pattern.
+
+.SH EXIT STATUS
+.TP
+.B 0
+Success
+.TP
+.B 1
+Error (window not found, script file missing, invalid arguments, etc.)
+.SH FILES
+.TP
+.I ~/.Xmodmap
+User keyboard mapping file (if present)
+.TP
+.I /usr/share/X11/xkb/
+System keyboard layout definitions
+.SH ENVIRONMENT
+.TP
+.B DISPLAY
+X11 display to connect to (default: :0)
+.SH BUGS
+.IP \(bu 2
+Only works on X11, not Wayland
+.IP \(bu 2
+Dead keys (compose sequences) not supported
+.IP \(bu 2
+Unicode characters beyond your keymap not supported
+.IP \(bu 2
+Multi-monitor setups untested
+.SH SEE ALSO
+.BR dump_keymap.py (1),
+.BR xdotool (1),
+.BR xmodmap (1),
+.BR setxkbmap (1),
+.BR python-xlib (7)
+.SH AUTHOR
+EdgeOfAssembly <haxbox2000@gmail.com>
+.SH COPYRIGHT
+Copyright \(co 2025 EdgeOfAssembly. License GPLv3+: GNU GPL version 3 or later.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.

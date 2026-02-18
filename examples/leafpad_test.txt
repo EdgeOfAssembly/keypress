@@ -1,0 +1,80 @@
+# Leafpad Test Script - Comprehensive feature demonstration
+# Usage: ./keypress.py "leafpad /tmp/test_output.txt" examples/leafpad_test.txt -w leafpad
+
+# Basic symbol test (important for Finnish/German/Swedish layouts)
+Testing symbols: / - = [ ] ; ' , .
+Brackets and braces: [ ] { }
+Backslash: \
+Pipe: |
+
+# Path test (common use case for DOS/Windows)
+Path example: C:\Program Files\Test\file.txt
+DOS path: C:\DOS\GAMES\MONKEY.EXE
+
+# Directory listing
+dir /p
+dir /w
+dir *.txt
+
+# Commands with quotes
+echo "Hello World"
+echo 'Single quotes'
+path=c:\dos\bin
+
+# Special keys test
+Testing special keys below:
+<Tab>
+Tabbed text here
+<Backspace>
+<Backspace>
+<Backspace>
+
+# Arrow key navigation
+Move cursor: <Left><Left><Left><Left><Right><Right>
+
+# Selection and copy-paste test
+Select this entire line of text
+<Home>
+<Shift+End>
+<Ctrl+c>
+<End>
+<Return>
+Pasted: 
+<nowait>
+<Ctrl+v>
+
+# Multi-line text block
+Line 1 of block
+Line 2 of block
+Line 3 of block
+
+# Function keys
+F1 for help: <F1>
+F3 for find: <F3>
+
+# Wait command test
+Waiting 1 second...
+<wait:1>
+Done waiting!
+
+# Combination test
+Numbers: 0123456789
+Shifted numbers: !@#$%^&*()
+Math: 2 + 2 = 4
+Comparison: 5 < 10 > 3
+
+# European characters (if in your layout)
+Testing international: äöå ÄÖÅ
+
+# Mixed brackets and symbols
+Code example: if (x == 10) { return [1, 2, 3]; }
+Array: array[0] = {key: "value"};
+
+# Escape sequences
+Newline escape: \n
+Tab escape: \t
+Quote escape: \"
+
+# End marker
+=== END OF TEST ===
+All features tested successfully!
