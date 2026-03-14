@@ -94,6 +94,18 @@ Use + to combine keys:
 # comment          Comment line (ignored)
 .fi
 
+.SS Loop Blocks
+Repeat a block of script lines N times using \fB<for:N>\fR and \fB</for>\fR:
+.nf
+<for:3>
+<Tab>
+<Enter>
+</for>
+.fi
+N must be an integer >= 1.  Loops may be nested.
+A missing \fB</for>\fR or an invalid count causes keypress.py to exit with
+an error message.
+
 .SS Complete Example
 .nf
 # Wait for app to start

@@ -203,6 +203,27 @@ echo "No enter after this"
 <wait:0.5>         # Wait 500ms
 ```
 
+**Loop blocks:**
+```
+<for:3>
+<Tab>
+<Enter>
+</for>
+```
+
+Repeats the enclosed block exactly `N` times (N must be an integer ≥ 1).
+Loops can be nested:
+
+```
+<for:2>
+<for:3>
+hello
+</for>
+</for>
+```
+
+The above types "hello" 6 times (2 × 3).
+
 **Comments:**
 ```
 # This is a comment

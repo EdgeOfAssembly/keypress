@@ -1,0 +1,30 @@
+# loop_example.txt – demonstrates <for:N> / </for> loop blocks
+#
+# Usage (normal text editor):
+#   ./keypress.py "leafpad /tmp/loop_output.txt" examples/loop_example.txt -w leafpad
+#
+# Usage (DOSBox-X):
+#   ./keypress.py "dosbox-x" examples/loop_example.txt -w DOSBox --emulator-mode -d 3
+
+# Wait for the application to be ready
+<wait:1>
+
+# Press Tab 3 times using a loop
+<for:3>
+<Tab>
+</for>
+
+# Press Enter twice
+<for:2>
+<Enter>
+</for>
+
+# Nested loop: type "line X" for 2 outer × 2 inner = 4 repetitions total
+<for:2>
+<for:2>
+loop body
+</for>
+</for>
+
+# Back to regular (non-loop) lines
+Done

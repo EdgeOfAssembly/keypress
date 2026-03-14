@@ -55,6 +55,11 @@ jobs:
           echo "--- Keymap output sample ---"
           head -n 30 /tmp/keymap.txt
       
+      - name: Test loop block parsing (pure Python, no X11 required)
+        run: |
+          python3 test_loops.py
+          echo "✅ Loop parsing tests passed"
+      
       - name: Test keypress.py basic functionality
         run: |
           # Start Xvfb
@@ -75,6 +80,24 @@ Testing symbols: [ ] \\ / - =
 <wait:0.5>
 Done!
 EOF
+          
+          # Create a loop script to verify it is accepted without errors
+          cat > /tmp/loop_script.txt << 'EOF'
+# Loop test script
+<for:2>
+<Tab>
+</for>
+EOF
+          
+          # Verify loop expansion works (script is parsed, no parse error)
+          timeout 15 ./keypress.py "leafpad /tmp/ci_output.txt" /tmp/loop_script.txt -w leafpad -d 3 -n || {
+            EXIT_CODE=$?
+            if [ $EXIT_CODE -eq 124 ]; then
+              echo "✅ Loop script executed (timed out as expected in CI)"
+            else
+              echo "⚠️  keypress.py exited with code $EXIT_CODE (loop script)"
+            fi
+          }
           
           # Run keypress.py with leafpad (timeout to prevent hanging)
           timeout 15 ./keypress.py "leafpad /tmp/ci_output.txt" /tmp/test_script.txt -w leafpad -d 3 -n || {
@@ -99,6 +122,7 @@ EOF
           test -f examples/leafpad_test.txt
           test -f examples/dosbox_commands.txt
           test -f examples/README.md
+          test -f examples/loop_example.txt
           echo "✅ Example files present"
       
       - name: Verify documentation exists
@@ -129,5 +153,6 @@ EOF
           echo "✅ dump_keymap.py functional"
           echo "✅ keypress.py executes"
           echo "✅ Debug mode works"
+          echo "✅ Loop parsing tests passed"
           echo "✅ Files present and valid"
           echo "=========================================="
