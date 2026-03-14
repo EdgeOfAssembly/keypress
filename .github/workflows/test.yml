@@ -60,6 +60,11 @@ jobs:
           python3 test_loops.py
           echo "✅ Loop parsing tests passed"
       
+      - name: Test loop execution path (integration, no X11 required)
+        run: |
+          python3 test_integration.py
+          echo "✅ Loop integration tests passed"
+      
       - name: Test keypress.py basic functionality
         run: |
           # Start Xvfb
@@ -154,5 +159,6 @@ EOF
           echo "✅ keypress.py executes"
           echo "✅ Debug mode works"
           echo "✅ Loop parsing tests passed"
+          echo "✅ Loop integration tests passed"
           echo "✅ Files present and valid"
           echo "=========================================="
