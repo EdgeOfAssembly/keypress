@@ -14,6 +14,71 @@ import argparse
 from Xlib import X, display, XK
 from Xlib.ext.xtest import fake_input
 
+def expand_script_loops(lines, _depth=0):
+    """Expand <for:N> ... </for> loop blocks in a list of script lines.
+
+    Returns a new flat list of lines with all loops expanded in-place.
+    Nested loops are supported.  Raises SystemExit on any malformed syntax:
+      - non-integer or out-of-range N in <for:N>
+      - a <for:N> block without a matching </for>
+      - a stray </for> with no matching <for:N>
+    """
+    result = []
+    i = 0
+    while i < len(lines):
+        stripped = lines[i].strip()
+        low = stripped.lower()
+
+        # Detect <for:N> opener
+        if low.startswith('<for:') and low.endswith('>'):
+            inner = stripped[5:-1]  # text between '<for:' and '>'
+            try:
+                count = int(inner)
+            except ValueError:
+                print(f"ERROR: Invalid loop count '{inner}' in '{stripped}' (must be an integer >= 1)")
+                sys.exit(1)
+            if count < 1:
+                print(f"ERROR: Loop count must be >= 1, got {count} in '{stripped}'")
+                sys.exit(1)
+
+            # Collect body lines up to matching </for>, respecting nesting
+            depth = 1
+            j = i + 1
+            body = []
+            while j < len(lines):
+                inner_low = lines[j].strip().lower()
+                if inner_low.startswith('<for:') and inner_low.endswith('>'):
+                    depth += 1
+                elif inner_low == '</for>':
+                    depth -= 1
+                    if depth == 0:
+                        break
+                body.append(lines[j])
+                j += 1
+            else:
+                # Exhausted lines without finding closing </for>
+                print(f"ERROR: Missing </for> for <for:{count}> (opened at script line {i + 1})")
+                sys.exit(1)
+
+            # Recursively expand any nested loops in the body, then repeat
+            expanded_body = expand_script_loops(body, _depth + 1)
+            for _ in range(count):
+                result.extend(expanded_body)
+
+            i = j + 1  # resume after the </for>
+
+        # Detect stray </for> with no matching opener
+        elif low == '</for>':
+            print(f"ERROR: Unexpected </for> at script line {i + 1} with no matching <for:N>")
+            sys.exit(1)
+
+        else:
+            result.append(lines[i])
+            i += 1
+
+    return result
+
+
 class KeypressAutomation:
     # Manual keysym to character mapping for common symbols
     # XK.keysym_to_string() doesn't work reliably for all keysyms
@@ -566,8 +631,10 @@ class KeypressAutomation:
             return False
         
         with open(script_path, 'r') as f:
-            lines = f.readlines()
-        
+            raw_lines = f.readlines()
+
+        lines = expand_script_loops(raw_lines)
+
         i = 0
         while i < len(lines):
             line = lines[i]

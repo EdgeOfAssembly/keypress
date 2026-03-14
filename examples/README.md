@@ -4,6 +4,16 @@ This directory contains example scripts demonstrating keypress.py features.
 
 ## Files
 
+### loop_example.txt
+Demonstrates `<for:N>` / `</for>` loop blocks:
+- Repeating a key multiple times without copy-paste
+- Nested loops for combined repetitions
+
+**Usage:**
+```bash
+./keypress.py "leafpad /tmp/loop_output.txt" examples/loop_example.txt -w leafpad
+```
+
 ### leafpad_test.txt
 Comprehensive test script showing:
 - Symbol typing (brackets, backslashes, special chars)
@@ -68,6 +78,18 @@ Each line is typed followed by Enter, unless `<nowait>` is used.
 
 **Flow Control:**
 - `<nowait>` - Don't press Enter after previous line
+
+**Loops:**
+- `<for:N>` / `</for>` - Repeat the enclosed block N times (N must be an integer >= 1)
+
+```
+<for:3>
+<Tab>
+<Enter>
+</for>
+```
+
+Loops can be nested for repeated sequences within sequences.
 
 ### Tips
 
