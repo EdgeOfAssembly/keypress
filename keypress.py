@@ -339,9 +339,6 @@ class KeypressAutomation:
         """Press and release a single key by keycode with modifiers
         modifier: 0=none, 1=shift, 2=altgr, 3=shift+altgr
         """
-        if not self._check_window_valid():
-            return False
-
         try:
             from Xlib import X
             from Xlib.ext.xtest import fake_input
@@ -352,8 +349,8 @@ class KeypressAutomation:
                 fake_input(self.display, X.KeyPress, 108)
 
             fake_input(self.display, X.KeyPress, keycode)
-            self.display.sync()
-            time.sleep(0.02)
+            self.display.flush()
+            time.sleep(0.05)
             fake_input(self.display, X.KeyRelease, keycode)
             self.display.sync()
 
@@ -362,7 +359,7 @@ class KeypressAutomation:
             if modifier in (1, 3):
                 fake_input(self.display, X.KeyRelease, 50)
 
-            time.sleep(0.02)
+            time.sleep(0.05)
             return True
         except Exception as e:
             print(f"Warning: Key press failed: {e}")
@@ -391,12 +388,12 @@ class KeypressAutomation:
             for keycode in key_info:
                 fake_input(self.display, X.KeyPress, keycode)
                 self.display.sync()
-                time.sleep(0.02)
+                time.sleep(0.05)
 
             for keycode in reversed(key_info):
                 fake_input(self.display, X.KeyRelease, keycode)
                 self.display.sync()
-                time.sleep(0.02)
+                time.sleep(0.05)
             return True
         except Exception as e:
             print(f"Warning: Combo failed: {e}")
