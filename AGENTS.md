@@ -98,3 +98,20 @@ CI jobs: unit tests (no X11) + integration tests (Xvfb).
 - `X.INTEGER` is not exposed by python-xlib — use `AnyPropertyType` instead
 - `_NET_WM_PID` is optional; some apps (feh) don't set it
 - `_retry_search` catches all exceptions silently (by design for retry)
+
+## Future Development
+
+Planned features are documented in `docs/`:
+
+1. `docs/IMPLEMENTATION_GUIDELINES.md` — Mandatory rules before touching `keypress.py`
+2. `docs/LESSONS_LEARNED.md` — Honest autopsy of our failed refactoring attempt, with checklist
+3. `docs/FEATURE_01_list_windows.md` — `--list-windows` CLI flag (standalone, safe)
+4. `docs/FEATURE_02_attach.md` — `--attach` and `--attach-window-id` for existing windows
+5. `docs/FEATURE_03_compose_fallback.md` — Compose sequence fallback for international chars (BLOCKED — needs deep testing)
+6. `docs/FEATURE_04_script_vars.md` — `${VAR}` variable substitution in scripts (low priority)
+
+Read `docs/LESSONS_LEARNED.md` first. Then read `docs/IMPLEMENTATION_GUIDELINES.md`.
+Then pick ONE feature from the list, create a branch, implement it atomically, test it on a real display, and merge.
+
+Under no circumstances should multiple features be implemented in the same branch without explicit justification.
+
