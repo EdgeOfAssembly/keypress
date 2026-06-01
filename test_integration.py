@@ -86,6 +86,7 @@ def make_auto():
     auto.window = mock.MagicMock()
     auto.window_valid = True
     auto.keymap_cache = {}
+    auto.script_vars = {}
     # Stub every method that touches X11
     auto.focus = mock.MagicMock(return_value=True)
     auto.press_key = mock.MagicMock()

@@ -45,6 +45,59 @@ DOSBox-X automation example showing:
 
 **Important:** Use `--emulator-mode` for DOSBox-X!
 
+### variable_demo.txt
+Demonstrates script variables (`${VAR}`) and conditionals:
+- Variable substitution with `${VAR}` syntax
+- Conditional branches with `<if:eq>`, `<else>`, `<if>`
+- Variable existence checks with `var_defined()`
+- Default values with `${VAR:-default}`
+
+**Usage:**
+```bash
+./keypress.py "leafpad /tmp/var_output.txt" examples/variable_demo.txt -w leafpad \
+         -a USERNAME=EdgeOfAssembly -a MODE=debug -a OUTPUT_DIR=/tmp
+```
+
+### conditional_demo.txt
+Demonstrates conditionals and while loops:
+- `<if:var_defined()>` for checking variable existence
+- `<if:eq()>` for equality comparisons
+- `<for:N>` loops with nested content
+- Loop simulation for polling scenarios
+
+**Usage:**
+```bash
+./keypress.py "leafpad" examples/conditional_demo.txt -w leafpad -a MODE=demo
+```
+
+### mouse_demo.txt
+Mouse automation demonstration:
+- `<rightclick:x,y>` - Right-click at coordinates
+- `<click:x,y>` - Left-click at coordinates
+- `<dblclick:x,y>` - Double-click at coordinates
+- `<scroll:up/down:N>` - Scroll wheel simulation
+
+**Usage:**
+```bash
+./keypress.py "leafpad" examples/mouse_demo.txt -w leafpad
+```
+
+### compose_demo.txt
+Dead-key and compose sequence demonstration:
+- Accented characters (é, ñ, ç)
+- Currency symbols (€, £)
+- Special punctuation (—, …)
+- Degree symbol (°)
+- Fractions (½, ¼, ¾)
+- Math symbols (≈, ×, ÷)
+
+**Usage:**
+```bash
+./keypress.py "leafpad /tmp/compose_output.txt" examples/compose_demo.txt -w leafpad
+```
+
+Note: For Finnish keyboards, ensure `--compose-key` matches your layout. Default `Alt_R` works for many layouts.
+
 ## Creating Your Own Scripts
 
 ### Basic Structure

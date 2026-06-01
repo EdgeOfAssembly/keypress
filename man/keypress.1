@@ -1,4 +1,4 @@
-.TH KEYPRESS 1 "2025-02-17" "1.0" "User Commands"
+.TH KEYPRESS 1 "2025-03-01" "1.0" "User Commands"
 .SH NAME
 keypress \- layout-aware X11 keyboard automation tool
 .SH SYNOPSIS
@@ -10,6 +10,11 @@ keypress \- layout-aware X11 keyboard automation tool
 [\fB\-w\fR \fIWINDOW\fR]
 [\fB\-n\fR]
 [\fB\-e\fR]
+[\fB\-a\fR \fINAME=VALUE\fR]
+[\fB\-\-compose-key\fR \fIKEY\fR]
+[\fB\-\-list-windows\fR]
+[\fB\-\-attach\fR \fIPID\fR]
+[\fB\-\-attach-window-id\fR \fIWID\fR]
 [\fB\-\-debug\fR]
 .I program
 .RI [ script ]
@@ -35,31 +40,44 @@ Delay between individual keystrokes in seconds. Default: 0.03 (30ms). Increase f
 .BI \-w\  WINDOW \fR,\ \fB\-\-window\  WINDOW
 Window name pattern to search for. Recommended for reliable window detection. The pattern is case-insensitive and matches partial names.
 .TP
-.B \-n, \-\-no\-wait
+.B \-n, \-\-no-wait
 Exit immediately after executing the script instead of waiting for the program to exit. Useful for background processes.
 .TP
-.B \-e, \-\-emulator\-mode
+.B \-e, \-\-emulator-mode
 Use hardcoded US keyboard layout instead of system layout. Required for emulators (DOSBox-X, VICE, MAME) that internally expect US keyboard layout.
+.TP
+.BI \-a\  NAME=VALUE \fR,\ \fB\-\-assign\  NAME=VALUE
+Set a script variable. Can be repeated for multiple variables. Variables are referenced in scripts as ${NAME} and ${NAME:-default}.
+.TP
+.BI \-\-compose-key\  KEY
+Set the compose key for dead keys and compose sequences. The key is specified by X11 keysym name (e.g. Alt_R, Multi_key). Default: Alt_R.
+.TP
+.B \-\-list-windows
+List all visible windows and exit. Useful for finding window names, IDs, and PIDs for use with \fB\-w\fR, \fB\-\-attach\fR, or \fB\-\-attach-window-id\fR.
+.TP
+.BI \-\-attach\  PID
+Attach to an already-running process by PID instead of launching a new one. The tool searches for a window belonging to the specified process.
+.TP
+.BI \-\-attach-window-id\  WID
+Attach to an already-running window by its window ID. WID is a hexadecimal number (e.g. 0x2000001). Use \fB\-\-list-windows\fR to find window IDs.
 .TP
 .B \-\-debug
 Enable debug output showing detected keyboard mapping. Displays which characters are cached and their keycodes/modifiers.
 .SH POSITIONAL ARGUMENTS
 .TP
 .I program
-Program to launch. If the program command contains arguments or spaces, enclose in quotes: "dosbox-x -c 'mount c ~/dos'".
+Program to launch. If the program command contains arguments or spaces, enclose in quotes: "dosbox-x -c 'mount c ~/dos'". Not required if \fB\-\-attach\fR or \fB\-\-attach-window-id\fR is used.
 .TP
 .I script
 Path to script file containing commands to execute. Optional if \fB\-c\fR is used.
 .SH SCRIPT FILE FORMAT
 Each line in the script file is typed followed by Enter, unless special commands are used.
-
 .SS Regular Text
 .nf
 dir /p
 echo "Hello"
-path=c:\\dos
+path=c:\dos
 .fi
-
 .SS Special Keys
 Special keys are enclosed in angle brackets:
 .nf
@@ -75,7 +93,6 @@ Special keys are enclosed in angle brackets:
 <Home> <End>       Navigation keys
 <PageUp> <PageDown>
 .fi
-
 .SS Key Combinations
 Use + to combine keys:
 .nf
@@ -85,15 +102,44 @@ Use + to combine keys:
 <Shift+Insert>     Shift+Insert
 <Ctrl+Alt+Del>     Three-key combo
 .fi
-
-.SS Special Commands
+.SS Variables
+Variables are set via the command line with \fB\-a\fR and referenced in scripts:
 .nf
-<wait:2>           Wait 2 seconds
-<wait:0.5>         Wait 500 milliseconds
-<nowait>           Don't press Enter after previous line
-# comment          Comment line (ignored)
+${VAR}             Insert value of VAR
+${VAR:-default}    Insert value of VAR or "default" if not set
 .fi
-
+.SS Conditionals
+Conditionally include script blocks:
+.nf
+<if:eq("USER","admin")>root</if>
+<if:not:var_defined("MODE")>default mode<else>custom mode</if>
+<if:window_exists("leafpad")><Alt+F4></if>
+<if:clipboard_empty>empty<else>has content</if>
+<if:true>always<else>never</if>
+<if:not:false>also always</if>
+.fi
+The \fB<else>\fR branch is optional. Supported conditions are listed in the \fBSCRIPT CONDITIONS\fR section below.
+.SS While Loops
+Repeat a block while a condition is true:
+.nf
+<while:eq("MODE","retry")><Tab><Return></while>
+<while:timeout:30:window_exists("dialog")><wait:1></while>
+.fi
+The \fBtimeout:N:\fR prefix limits execution to N seconds. The loop exits when the condition becomes false or the timeout is reached.
+.SS Break
+Exit the current loop immediately:
+.nf
+<while:window_exists("dialog")>
+<if:eq("STATUS","done")><break></if>
+<wait:1>
+</while>
+.fi
+.SS Clipboard Commands
+Interact with the X11 clipboard:
+.nf
+<clipboard:get>       Insert current clipboard text
+<clipboard:set:text>    Set clipboard to "text"
+.fi
 .SS Loop Blocks
 Repeat a block of script lines N times using \fB<for:N>\fR and \fB</for>\fR:
 .nf
@@ -105,29 +151,40 @@ Repeat a block of script lines N times using \fB<for:N>\fR and \fB</for>\fR:
 N must be an integer >= 1.  Loops may be nested.
 A missing \fB</for>\fR or an invalid count causes keypress.py to exit with
 an error message.
-
-.SS Complete Example
+.SS Special Commands
 .nf
-# Wait for app to start
-<wait:2>
-
-# Type username
-admin
-<Tab>
-
-# Type password
-secret123
-<Return>
-
-# Wait for login
-<wait:1>
-
-# Open file
-<Ctrl+o>
-test.txt
-<Return>
+<wait:2>           Wait 2 seconds
+<wait:0.5>         Wait 500 milliseconds
+<nowait>           Don't press Enter after previous line
+# comment          Comment line (ignored)
 .fi
+.SH SCRIPT CONDITIONS
+Conditions are used in \fB<if:>\fR and \fB<while:>\fR blocks.
 
+.TP
+.BI eq(" NAME "," value ")
+True if the variable NAME equals the given value.
+.TP
+.BI ne(" NAME "," value ")
+True if the variable NAME does not equal the given value.
+.TP
+.BI var_defined(" NAME ")
+True if the variable NAME has been set (via \fB\-a\fR).
+.TP
+.BI window_exists(" pattern ")
+True if a window matching the pattern exists.
+.TP
+.B clipboard_empty
+True if the X11 clipboard contains no text.
+.TP
+.B true
+Always true.
+.TP
+.B false
+Always false.
+.TP
+.BI not: condition
+Negates any condition. For example, \fBnot:var_defined("MODE")\fR or \fBnot:eq("USER","guest")\fR.
 .SH EXAMPLES
 .SS Normal Applications
 Automate text editor with system keyboard layout:
@@ -135,36 +192,62 @@ Automate text editor with system keyboard layout:
 keypress.py "leafpad" script.txt -w leafpad
 keypress.py "gedit" commands.txt -w gedit -d 3
 .fi
-
 .SS Emulators
 Automate DOSBox with US layout (required):
 .nf
 keypress.py "dosbox-x" dos.txt -w DOSBox --emulator-mode
 keypress.py "vice" game.txt -w VICE -e -d 5
 .fi
-
 .SS Quick Commands
 Execute without script file:
 .nf
 keypress.py "xterm" -c "ls -la" -c "pwd" -w xterm
 keypress.py "leafpad" -c "Hello" -c "<Ctrl+s>" -w leafpad -n
 .fi
+.SS Attach to Running Process
+Attach to an already-running window by PID or window ID:
+.nf
+keypress.py --attach 1234 -c "hello" -w leafpad
+keypress.py --attach-window-id 0x2000001 -c "<Return>"
+.fi
+.SS List Windows
+List visible windows for debugging or finding targets:
+.nf
+keypress.py --list-windows
+.fi
+.SS Variables and Conditionals
+Use variables and conditionals in scripts:
+.nf
+keypress.py "leafpad" script.txt -a "USER=admin" -a "MODE=debug"
+.fi
+An example script using variables and conditionals:
+.nf
+# Wait for app to start
+<wait:2>
 
+# Conditional branch
+<if:eq("MODE","debug")>debug mode active<else>release mode</if>
+
+# Type username using variable
+${USER}
+<Tab>
+
+# Type password
+secret123
+<Return>
+.fi
 .SS Debug Keyboard Layout
 See what characters are detected:
 .nf
 keypress.py "leafpad" test.txt --debug
 .fi
-
 .SH MODES
 .SS Normal Mode (Default)
 Queries X11 keyboard mapping and respects your system layout (Finnish, German, Swedish, etc.). Properly handles AltGr symbols in extended keymap columns. Use for normal applications like text editors, terminals, browsers.
-
-.SS Emulator Mode (\-\-emulator\-mode)
+.SS Emulator Mode (\-\-emulator-mode)
 Uses hardcoded US keyboard layout, ignoring system settings. Required for emulators (DOSBox-X, VICE, MAME) because they run DOS/games internally which expect US keyboard codes. Without this flag, symbols will be wrong in emulators.
-
 .SH WINDOW DETECTION
-The program searches for the target window in two ways:
+The program searches for the target window in several ways:
 
 .SS By PID (Default)
 Searches for a window belonging to the launched process. Works for simple cases but may fail for complex applications.
@@ -177,6 +260,8 @@ keypress.py "app" script.txt -w "Application Name"
 
 Use \fBxdotool search --name ""\fR to list all windows and find the correct pattern.
 
+.SS By Attachment (\-\-attach, \-\-attach-window-id)
+Attaches to an already-running process or window instead of launching a new one. Useful for automating existing applications.
 .SH EXIT STATUS
 .TP
 .B 0
@@ -199,13 +284,12 @@ X11 display to connect to (default: :0)
 .IP \(bu 2
 Only works on X11, not Wayland
 .IP \(bu 2
-Dead keys (compose sequences) not supported
-.IP \(bu 2
 Unicode characters beyond your keymap not supported
 .IP \(bu 2
 Multi-monitor setups untested
 .SH SEE ALSO
 .BR dump_keymap.py (1),
+.BR mouse.py (1),
 .BR xdotool (1),
 .BR xmodmap (1),
 .BR setxkbmap (1),

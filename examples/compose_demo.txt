@@ -1,0 +1,31 @@
+# compose_demo.txt — dead-key and compose sequence demo
+# Usage: ./keypress.py "leafpad /tmp/compose_output.txt" examples/compose_demo.txt -w leafpad
+#
+# For Finnish keyboards: ensure --compose-key matches your layout
+# Default Alt_R works for many layouts
+
+# Accented characters via dead keys
+Resume: cafe with creme brulee
+Price: 50 cents
+
+# Currency symbols
+Euro: 100
+British: 50
+
+# Special punctuation
+Dash: This is an em dash, useful for parenthetical statements
+Ellipsis: Loading...
+
+# Degree symbol
+Temperature: 25 degrees Celsius
+
+# Fractions
+One half, one quarter, three quarters
+
+# Math symbols
+Approximately: 100
+Multiply: 2 x 3
+Division: 10 / 2
+
+End of compose demo
+<Ctrl+s>

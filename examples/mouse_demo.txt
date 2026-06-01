@@ -1,0 +1,22 @@
+# mouse_demo.txt — mouse automation demonstration
+# Usage: ./mouse.py "leafpad" examples/mouse_demo.txt -w leafpad
+#        (or attach to already-running leafpad)
+
+# Open leafpad context menu
+<rightclick:100,100>
+<wait:0.5>
+
+# Click somewhere else to close it
+<click:300,200>
+<wait:0.5>
+
+# Double-click on a word
+<dblclick:150,100>
+<wait:0.5>
+
+# Scroll down a bit
+<scroll:down:3>
+<wait:0.5>
+
+# Scroll back up
+<scroll:up:3>

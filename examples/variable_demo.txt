@@ -1,0 +1,22 @@
+# variable_demo.txt — demonstrates variables and conditionals
+# Usage: ./keypress.py "leafpad /tmp/var_output.txt" examples/variable_demo.txt -w leafpad \
+#          -a USERNAME=EdgeOfAssembly -a MODE=debug -a OUTPUT_DIR=/tmp
+
+Hello, ${USERNAME}!
+<wait:0.5>
+
+<if:eq("MODE","debug")>
+  [DEBUG MODE ACTIVE]
+  Output directory: ${OUTPUT_DIR}
+<else>
+  [NORMAL MODE]
+<if>
+
+<if:not:var_defined("MISSING_VAR")>
+  Note: MISSING_VAR is not set
+<if>
+
+Using default: ${MISSING_VAR:-(not set)}
+<wait:0.5>
+
+Thank you for using keypress.py!

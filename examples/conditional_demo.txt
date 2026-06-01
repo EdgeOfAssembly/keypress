@@ -1,0 +1,27 @@
+# conditional_demo.txt — demonstrates conditionals and while loops
+# Usage: ./keypress.py "leafpad" examples/conditional_demo.txt -w leafpad -a MODE=demo
+
+Starting conditional demo...
+<wait:0.5>
+
+<if:var_defined("MODE")>
+  Mode is defined: ${MODE}
+<else>
+  No mode specified
+<if>
+
+<if:eq("MODE","demo")>
+  This is the DEMO branch
+<else>
+  This is a different mode
+<if>
+
+# Simulate a polling loop (normally would poll for a window)
+# In real use: <while:timeout:10:not:window_exists("Save Dialog")>
+Waiting sequence:
+<for:3>
+  .
+  <wait:0.3>
+</for>
+
+Demo complete!

@@ -1,0 +1,187 @@
+.TH MOUSE 1 "2025-03-01" "1.0" "User Commands"
+.SH NAME
+mouse \- X11 mouse automation tool
+.SH SYNOPSIS
+.B mouse.py
+[\fB\-h\fR]
+[\fB\-c\fR \fICOMMAND\fR]
+[\fB\-d\fR \fIDELAY\fR]
+[\fB\-t\fR \fIEVENT_DELAY\fR]
+[\fB\-w\fR \fIWINDOW\fR]
+[\fB\-n\fR]
+[\fB\-\-attach\fR \fIPID\fR]
+[\fB\-\-attach-window-id\fR \fIWID\fR]
+[\fB\-\-debug\fR]
+.RI [ program ]
+.RI [ script ]
+.SH DESCRIPTION
+.B mouse.py
+is an X11 mouse automation tool that provides precise control over cursor movement, clicking, dragging, and scrolling. It is designed to complement \fBkeypress.py\fR for full GUI automation tasks.
+
+The tool operates by sending X11 mouse events directly to the target window, allowing automation of interactions with any X11 application.
+.SH OPTIONS
+.TP
+.B \-h, \-\-help
+Show help message and exit.
+.TP
+.BI \-c\  COMMAND \fR,\ \fB\-\-command\  COMMAND
+Execute a single command. Can be repeated for multiple commands. If no script file is provided, at least one \fB\-c\fR option is required.
+.TP
+.BI \-d\  DELAY \fR,\ \fB\-\-delay\  DELAY
+Startup delay in seconds before searching for the program window. Default: 2.0. Increase if window detection fails.
+.TP
+.BI \-t\  EVENT_DELAY \fR,\ \fB\-\-typing-delay\  EVENT_DELAY
+Delay between individual mouse events in seconds. Default: 0.03 (30ms). Increase for slower transitions, decrease for faster.
+.TP
+.BI \-w\  WINDOW \fR,\ \fB\-\-window\  WINDOW
+Window name pattern to search for. Recommended for reliable window detection. The pattern is case-insensitive and matches partial names.
+.TP
+.B \-n, \-\-no-wait
+Exit immediately after executing the script instead of waiting for the program to exit. Useful for background processes.
+.TP
+.BI \-\-attach\  PID
+Attach to an already-running process by PID instead of launching a new one. The tool searches for a window belonging to the specified process.
+.TP
+.BI \-\-attach-window-id\  WID
+Attach to an already-running window by its window ID. WID is a hexadecimal number (e.g. 0x2000001).
+.TP
+.B \-\-debug
+Enable debug output showing window detection and mouse event details.
+.SH POSITIONAL ARGUMENTS
+.TP
+.I program
+Program to launch. Not required if \fB\-\-attach\fR or \fB\-\-attach-window-id\fR is used.
+.TP
+.I script
+Path to script file containing commands to execute. Optional if \fB\-c\fR is used.
+.SH SCRIPT COMMANDS
+All commands are enclosed in angle brackets.
+
+.SS Clicks
+.TP
+.BI <click:x,y>
+Left-click at the given coordinates relative to the target window.
+.TP
+.BI <rightclick:x,y>
+Right-click at the given coordinates relative to the target window.
+.TP
+.BI <dblclick:x,y>
+Double-click at the given coordinates relative to the target window.
+
+.SS Movement and Drag
+.TP
+.BI <move:x,y>
+Move the mouse cursor to the given coordinates without clicking, relative to the target window.
+.TP
+.BI <drag:x1,y1:x2,y2>
+Click and hold at \fIx1,y1\fR, drag to \fIx2,y2\fR, and release.
+
+.SS Scrolling
+.TP
+.BI <scroll:up:N>
+Scroll the mouse wheel up by \fIN\fR units at the current cursor position.
+.TP
+.BI <scroll:down:N>
+Scroll the mouse wheel down by \fIN\fR units at the current cursor position.
+
+.SS Timing
+.TP
+.BI <wait:N>
+Pause execution for \fIN\fR seconds. Fractional seconds are supported (e.g. 0.5 for 500 milliseconds).
+.SH EXAMPLES
+.SS Quick Click Commands
+Click at specific coordinates in a running application:
+.nf
+mouse.py "leafpad" -c "<click:100,200>" -c "<wait:1>"
+.fi
+
+.SS Attach to Running Process
+Attach to an existing window and interact with it:
+.nf
+mouse.py --attach leafpad -c "<click:500,300>"
+.fi
+
+.SS Script File Usage
+Automate a sequence of mouse actions using a script file:
+.nf
+mouse.py "gedit" mouse_script.txt -w gedit
+.fi
+
+An example script file:
+.nf
+# Move cursor to toolbar
+<move:50,30>
+
+# Click toolbar button
+<click:50,30>
+<wait:0.5>
+
+# Right-click in text area
+<rightclick:200,150>
+<wait:0.5>
+
+# Scroll down in document
+<scroll:down:5>
+<wait:1>
+
+# Drag to select text
+<drag:100,100:300,100>
+.fi
+
+.SS Combined with Keypress
+Use both \fBmouse.py\fR and \fBkeypress.py\fR together for full GUI automation:
+.nf
+keypress.py "gedit" -c "<Ctrl+a>" -w gedit
+mouse.py "gedit" -c "<rightclick:200,200>" -w gedit
+.fi
+.SH WINDOW DETECTION
+The program searches for the target window in several ways:
+
+.SS By PID (Default)
+Searches for a window belonging to the launched process. Works for simple cases but may fail for complex applications.
+
+.SS By Name Pattern (\-w)
+Searches for a window whose title matches the pattern (case-insensitive, partial match). More reliable:
+.nf
+mouse.py "app" script.txt -w "Application Name"
+.fi
+
+.SS By Attachment (\-\-attach, \-\-attach-window-id)
+Attaches to an already-running process or window instead of launching a new one. Useful for automating existing applications.
+.SH EXIT STATUS
+.TP
+.B 0
+Success
+.TP
+.B 1
+Error (window not found, script file missing, invalid arguments, etc.)
+.SH DEPENDENCIES
+Requires python3-xlib and an X11 display:
+.nf
+Debian/Ubuntu: apt install python3-xlib
+Arch/Manjaro:  pacman -S python-xlib
+Fedora:        dnf install python3-xlib
+.fi
+.SH ENVIRONMENT
+.TP
+.B DISPLAY
+X11 display to connect to (default: :0)
+.SH BUGS
+.IP \(bu 2
+Only works on X11, not Wayland
+.IP \(bu 2
+Multi-monitor setups may require window-relative coordinates
+.IP \(bu 2
+Window decoration offsets may affect coordinate precision
+.SH SEE ALSO
+.BR keypress.py (1),
+.BR dump_keymap.py (1),
+.BR xdotool (1),
+.BR xmodmap (1),
+.BR python-xlib (7)
+.SH AUTHOR
+EdgeOfAssembly <haxbox2000@gmail.com>
+.SH COPYRIGHT
+Copyright \(co 2025 EdgeOfAssembly. License GPLv3+: GNU GPL version 3 or later.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
